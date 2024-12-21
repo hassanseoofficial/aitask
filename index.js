@@ -13,10 +13,10 @@ app.use(bodyParser.json());
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: 'sk-proj-h7pXLwRS7z1Ep9KuPM6JT3BlbkFJ3XTMWFhg72xVEdI6nUof'  // Replace with your API key
+  apiKey: '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'  // Replace with your API key
 });
 
-const ASSISTANT_ID = 'asst_N11nccaS8RrqUeAMaqNXSo7m';
+const ASSISTANT_ID = 'asst_1IKLBvJ3cEsTTHztNcCfuFrx';
 
 // Simple logging function
 async function createLog(fileName, logContent) {
