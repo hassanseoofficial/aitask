@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Analyzer Test</title>
+</head>
+<body>
+    <h2>Email Analyzer Test</h2>
+    <form id="emailForm">
+        <textarea name="EmailBody" rows="10" cols="50">Dear Jalil Haider, This is a billing notice that your invoice no. 31668 which was generated on 19/11/2024 is now overdue. Your payment method is: Manual / Bank Transfer Invoice: 31668 Balance Due: Rs.5000.00PKR Due Date: 26/11/2024 You can login to your client area to view and pay the invoice at Regards, Muhammad Jawad (C.E.O) www.PakiHosting.com</textarea>
+        <br><br>
+        <button type="submit">Analyze Email</button>
+    </form>
+    <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+    <script>
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Processing...';
+
+            try {
+                const response = await fetch('http://localhost:3000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(formData)
+                });
+                
+                const data = await response.json();
+                resultDiv.textContent = data.response;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
