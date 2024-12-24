@@ -3,20 +3,21 @@ const express = require('express');
 const OpenAI = require('openai');
 const fs = require('fs').promises;
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware to parse POST data
+// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: 'sk-proj-h7pXLwRS7z1Ep9KuPM6JT3BlbkFJ3XTMWFhg72xVEdI6nUof'  // Replace with your API key
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-const ASSISTANT_ID = 'asst_N11nccaS8RrqUeAMaqNXSo7m';
+const ASSISTANT_ID = process.env.ASSISTANT_ID;
 
 // Simple logging function
 async function createLog(fileName, logContent) {
@@ -38,7 +39,10 @@ async function createThread() {
     const thread = await openai.beta.threads.create();
     return thread;
   } catch (error) {
-    console.error('Error creating thread:', error);
+    console.error('Error creating thread:', error.message);
+    if (error.message.includes('invalid_api_key')) {
+      throw new Error('Invalid API key configuration. Please check your environment settings.');
+    }
     throw error;
   }
 }
@@ -84,8 +88,15 @@ async function retrieveRun(threadId, runId) {
 // POST endpoint to handle email analysis
 app.post('/analyze', async (req, res) => {
   try {
+    // Validate environment variables first
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
+    }
+    if (!process.env.ASSISTANT_ID) {
+      throw new Error('Assistant ID not configured');
+    }
+
     const emailBody = req.body.EmailBody;
-    
     if (!emailBody) {
       return res.status(400).json({ error: 'EmailBody parameter is required' });
     }
@@ -118,12 +129,28 @@ app.post('/analyze', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing request:', error);
-    await createLog('error.log', { error: error.message });
+    await createLog('error.log', { 
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+    
+    if (error.message.includes('API key')) {
+      return res.status(500).json({ 
+        error: 'API configuration error. Please contact system administrator.' 
+      });
+    }
+    
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Start server
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
 });
